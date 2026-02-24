@@ -173,7 +173,7 @@ http_requests_total{method="POST", status="500"} 3
 
 With labels, a single metric becomes a family of related time series - one for each unique combination of label values. This lets you slice and filter your data when querying in Grafana.
 
-> **NOTE:** The metric name is itself a label under the hood, called `__name__`. This means you can select a metric by name using a label selector: `{__name__="http_requests_total"}`. This is rarely needed day-to-day, but useful to know when building advanced queries.
+> **Note:** The metric name is itself a label under the hood, called `__name__`. This means you can select a metric by name using a label selector: `{__name__="http_requests_total"}`. This is rarely needed day-to-day, but useful to know when building advanced queries.
 
 **Best practices for labels:**
 - Keep the number of label values bounded. Avoid using labels with high cardinality values (e.g., user IDs or request IDs), as each unique combination creates a separate time series, which can overload Prometheus.
@@ -208,14 +208,14 @@ Instead of manually telling Prometheus the address of every service to collect f
 
 Prometheus supports several service discovery mechanisms:
 
-| Type | How It Works | Best For |
-|---|---|---|
-| **Static configuration** | You manually list service addresses in the config file | Simple setups, fixed infrastructure |
-| **Kubernetes SD** | Prometheus automatically discovers pods, services, and endpoints in your cluster | Kubernetes environments |
-| **HTTP SD** | Prometheus calls an HTTP endpoint that returns a list of targets in JSON format | Custom or dynamic environments where targets are managed by an external system |
-| **File-based SD** | Prometheus reads a file (updated by another tool) to get service addresses | Custom or hybrid setups |
-| **Consul SD** | Prometheus queries Consul (a service registry) to find services | Environments using Consul |
-| **EC2 SD** | Prometheus discovers AWS EC2 instances automatically | AWS-based infrastructure |
+| Type                     | How It Works                                                                     | Best For                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **Static configuration** | You manually list service addresses in the config file                           | Simple setups, fixed infrastructure                                            |
+| **Kubernetes SD**        | Prometheus automatically discovers pods, services, and endpoints in your cluster | Kubernetes environments                                                        |
+| **HTTP SD**              | Prometheus calls an HTTP endpoint that returns a list of targets in JSON format  | Custom or dynamic environments where targets are managed by an external system |
+| **File-based SD**        | Prometheus reads a file (updated by another tool) to get service addresses       | Custom or hybrid setups                                                        |
+| **Consul SD**            | Prometheus queries Consul (a service registry) to find services                  | Environments using Consul                                                      |
+| **EC2 SD**               | Prometheus discovers AWS EC2 instances automatically                             | AWS-based infrastructure                                                       |
 
 In a Kubernetes environment, **Kubernetes Service Discovery** is the standard approach. When combined with the Prometheus Operator (see below), Prometheus can automatically discover and collect from any service that has the right configuration applied - without any manual updates to the Prometheus config.
 
@@ -292,26 +292,71 @@ For the full reference on all available resources and their configuration option
 
 ---
 
-## Collecting - OS vs. VM
+## Collecting - VM vs. Kubernetes
 
-Depending on where your service runs, the approach to collecting infrastructure-level metrics (CPU, memory, disk, network) differs:
+How you configure Prometheus to collect infrastructure-level metrics depends on where your service is running. The two most common environments are a Virtual Machine (VM) and a Kubernetes cluster, and each requires a different scrape configuration in `prometheus.yml`.
 
-**Bare Metal / Virtual Machine (VM):**
-Deploy the **Node Exporter** directly on the machine. The Node Exporter is a Prometheus exporter that reads OS-level metrics from the host and exposes them on a `/metrics` endpoint. Prometheus then collects from it like any other exporter.
+### Collecting from a VM (Node Exporter)
 
+On a VM, infrastructure metrics (CPU, memory, disk, network) are exposed by the **Node Exporter** - a Prometheus exporter that runs directly on the machine and serves metrics at `http://<machine-ip>:9100/metrics`.
+
+To tell Prometheus to collect from it, you add a static scrape job to `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: "node-exporter"
+    static_configs:
+      - targets:
+          - "10.0.0.5:9100"   # The IP and port of the Node Exporter on your VM
+          - "10.0.0.6:9100"   # Add one entry per machine
 ```
-Node Exporter runs on: http://<machine-ip>:9100/metrics
+
+Each target is a specific machine address. Prometheus will collect from every address listed, and will automatically attach `job="node-exporter"` and `instance="10.0.0.5:9100"` labels to all metrics - so you always know which machine a metric came from.
+
+**What gets collected:** Host-level metrics for each machine - CPU usage, memory, disk I/O, filesystem usage, and network traffic, all scoped to the individual VM.
+
+### Collecting from Kubernetes (kubernetes_sd_config)
+
+In a Kubernetes environment, services and pods are dynamic - they come and go, and their IP addresses change. Rather than maintaining a static list of addresses, you use `kubernetes_sd_config` in `prometheus.yml` to let Prometheus discover targets automatically from the Kubernetes API.
+
+```yaml
+scrape_configs:
+  - job_name: "kubernetes-pods"
+    kubernetes_sd_configs:
+      - role: pod               # Discover all pods in the cluster
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: "true"           # Only collect from pods with this annotation
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)             # Use the pod's custom /metrics path if specified
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace # Attach the pod's namespace as a label
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod       # Attach the pod name as a label
 ```
 
-**Kubernetes (Containerized):**
-Run the Node Exporter as a **DaemonSet** - a Kubernetes resource that ensures one Node Exporter pod runs on every node in the cluster. This way, every node's infrastructure metrics are automatically collected without manual setup per machine.
+The `role` field tells Prometheus what Kubernetes objects to discover. The most common roles are:
 
-The **kube-state-metrics** exporter is also commonly deployed in Kubernetes to expose cluster-level metrics (pod status, deployment health, resource requests/limits) that the Node Exporter doesn't cover.
+| Role        | What Prometheus Discovers                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------- |
+| `pod`       | All pods in the cluster (or namespace)                                                      |
+| `endpoints` | The endpoints behind a Kubernetes Service                                                   |
+| `node`      | All nodes in the cluster - used for collecting Node Exporter metrics running as a DaemonSet |
 
-**Summary:**
+**What gets collected:** Metrics from the pods or nodes themselves - including your application metrics and, when using the `node` role with a Node Exporter DaemonSet, infrastructure metrics per cluster node.
 
-| Environment | What to Deploy | What It Collects |
-|---|---|---|
-| VM / Bare Metal | Node Exporter (as a service) | CPU, memory, disk, network per host |
-| Kubernetes | Node Exporter (as DaemonSet) | Same, but per every cluster node |
-| Kubernetes | kube-state-metrics | Pod status, deployment health, resource limits |
+> **Note:** When using the Prometheus Operator, you typically don't write `kubernetes_sd_config` directly. The Operator generates this configuration for you based on the `ServiceMonitor` and `PodMonitor` resources you apply. The raw `prometheus.yml` approach is relevant when running Prometheus without the Operator.
+
+### Key Difference
+
+The fundamental difference between the two approaches is **how targets are defined**:
+
+|                                                 | VM (Static)                            | Kubernetes (Dynamic)                                                            |
+| ----------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------- |
+| **Target discovery**                            | Manually listed IP addresses           | Automatically discovered via Kubernetes API                                     |
+| **Config update needed when a target changes?** | Yes - you must update `prometheus.yml` | No - Prometheus re-discovers automatically                                      |
+| **Metrics scope**                               | Per-machine host metrics               | Per-pod or per-node metrics with Kubernetes context (namespace, pod name, etc.) |
+| **Labels attached**                             | `job`, `instance` (IP address)         | `job`, `instance`, plus Kubernetes metadata (`namespace`, `pod`, `node`, etc.)  |
