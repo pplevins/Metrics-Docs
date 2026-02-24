@@ -60,7 +60,7 @@ When building your first Dashboards, we recommend including these standard Panel
 * **Error Rate:** A Time Series chart tracking 400 and 500-level HTTP errors, alerting you to broken links or server crashes.
 
 ### Explanation of Existing Templates
-We provide several built-in templates out-of-the-box. The most common is the **Node Exporter Template**. This Dashboard automatically visualizes hardware metrics—like CPU, RAM, and Network bandwidth—for any server connected to our system, requiring absolutely zero custom query writing on your part.
+We provide several built-in templates out-of-the-box. The most common is the **Node Exporter Template**. This Dashboard automatically visualizes hardware metrics - like CPU, RAM, and Network bandwidth - for any server connected to our system, requiring absolutely zero custom query writing on your part.
 
 ---
 

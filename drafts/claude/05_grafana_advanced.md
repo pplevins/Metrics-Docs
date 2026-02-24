@@ -2,7 +2,7 @@
 
 ## Using Variables in Dashboards
 
-**Variables** make your dashboards dynamic and reusable. Instead of creating a separate dashboard for each environment, service, or instance, you define variables that act as filters — and your dashboard adapts to whichever option is selected.
+**Variables** make your dashboards dynamic and reusable. Instead of creating a separate dashboard for each environment, service, or instance, you define variables that act as filters - and your dashboard adapts to whichever option is selected.
 
 Variables appear as **dropdown selectors at the top of a dashboard**. When you change the selected value, all panels that use that variable update automatically.
 
@@ -39,7 +39,7 @@ Variables appear as **dropdown selectors at the top of a dashboard**. When you c
 
 ### Variable Types
 
-**Query** — The most common type. Grafana queries Prometheus to populate the list of options dynamically.
+**Query** - The most common type. Grafana queries Prometheus to populate the list of options dynamically.
 
 Example: To create a variable that lists all available `service` label values:
 ```promql
@@ -47,13 +47,13 @@ label_values(http_requests_total, service)
 ```
 This queries Prometheus for all unique values of the `service` label in the `http_requests_total` metric.
 
-**Custom** — You manually define the list of options.
+**Custom** - You manually define the list of options.
 
 Example: A list of environments: `production,staging,development`
 
-**Constant** — A fixed value used across the dashboard (useful for things like a data source URL or a shared prefix).
+**Constant** - A fixed value used across the dashboard (useful for things like a data source URL or a shared prefix).
 
-**Interval** — A time interval variable, useful for passing into `rate()` or `increase()` functions.
+**Interval** - A time interval variable, useful for passing into `rate()` or `increase()` functions.
 
 Example options: `1m,5m,10m,30m,1h`
 
@@ -93,7 +93,7 @@ This creates a cascading filter experience where selecting a cluster automatical
 
 ### Best Practices for Variables
 
-- Always use variables for **environment**, **service**, and **instance** filters — this avoids the need for duplicate dashboards.
+- Always use variables for **environment**, **service**, and **instance** filters - this avoids the need for duplicate dashboards.
 - Enable **Include All option** when you want users to be able to see aggregated data across all values.
 - Use descriptive **Labels** (what's shown in the UI) even if the variable **Name** is short.
-- Keep the number of variables reasonable — too many dropdowns at the top of a dashboard make it harder to use.
+- Keep the number of variables reasonable - too many dropdowns at the top of a dashboard make it harder to use.

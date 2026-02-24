@@ -35,10 +35,10 @@ sum(rate(http_requests_total{service="$service"}[5m]))
 
 ---
 
-### Request Latency — p50, p95, p99
+### Request Latency - p50, p95, p99
 
 **Panel type:** Time series
-**Purpose:** Shows how long your service takes to respond. Multiple percentiles give a complete picture — p50 is the typical experience, p99 reveals the worst-case experience.
+**Purpose:** Shows how long your service takes to respond. Multiple percentiles give a complete picture - p50 is the typical experience, p99 reveals the worst-case experience.
 
 ```promql
 # p50 (median)

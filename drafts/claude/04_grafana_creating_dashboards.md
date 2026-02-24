@@ -9,7 +9,7 @@ The fastest way to get a working dashboard is to import a pre-built one. Grafana
 1. In the Grafana left sidebar, go to **Dashboards → Import**.
 2. Click **Upload JSON file** and select your `.json` dashboard file.
    Alternatively, paste the JSON content directly into the text field.
-3. Review the dashboard settings — name, folder, and data source.
+3. Review the dashboard settings - name, folder, and data source.
 4. Click **Import**.
 
 The dashboard will appear immediately with live data from Prometheus.
@@ -48,7 +48,7 @@ A panel is the building block of any dashboard. Here's how to add and configure 
 
 ## 3. How to Write a Query
 
-Grafana panels retrieve data using **PromQL** — Prometheus Query Language. PromQL is a powerful expression language that lets you filter, aggregate, and compute metrics.
+Grafana panels retrieve data using **PromQL** - Prometheus Query Language. PromQL is a powerful expression language that lets you filter, aggregate, and compute metrics.
 
 ### PromQL Basics
 
@@ -88,7 +88,7 @@ This calculates the percentage of requests that returned a 5xx error.
 ```promql
 histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))
 ```
-This calculates the 95th percentile (p95) request latency — meaning 95% of requests completed within this duration.
+This calculates the 95th percentile (p95) request latency - meaning 95% of requests completed within this duration.
 
 ### Query Tips
 
@@ -151,5 +151,5 @@ You can configure any panel to link to another dashboard when clicked. This is c
 - **Set meaningful thresholds and color ranges** on stat and gauge panels so the visual signal is immediately clear.
 - **Use consistent time ranges** across panels in the same dashboard. If one panel shows the last hour and another shows the last day, comparisons become confusing.
 - **Name dashboards clearly** and organize them into folders by service, team, or environment.
-- **Version your dashboards** — export them as JSON and store them in version control alongside your service code.
+- **Version your dashboards** - export them as JSON and store them in version control alongside your service code.
 - **Avoid duplicating panels** across dashboards. If multiple dashboards need the same panel, consider whether they should link to a shared dashboard instead.

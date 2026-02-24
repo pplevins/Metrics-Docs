@@ -9,7 +9,7 @@ Welcome to your system observability guide. To ensure your business runs without
 Metrics collection is the continuous process of gathering numerical data about your Services. Think of it as checking your system's vital signs. Instead of waiting for a user to report a problem, metrics allow us to see exactly how much traffic your system is handling, how fast it is responding, and if any errors are occurring behind the scenes.
 
 ### Prometheus: The Engine
-Prometheus is the industry-standard tool we use to gather and store your metrics. Instead of your Service constantly pushing data out, Prometheus is designed to periodically visit a specific web address on your Service—called an **Endpoint**—to collect the latest data. 
+Prometheus is the industry-standard tool we use to gather and store your metrics. Instead of your Service constantly pushing data out, Prometheus is designed to periodically visit a specific web address on your Service - called an **Endpoint** - to collect the latest data. 
 
 ### Collector
 A Collector is a small, lightweight piece of code that lives directly inside your application. Its only job is to count and measure things in real-time. For example, a Collector might act as a stopwatch to measure how long a database query takes, or a clicker counting how many times a user logs in. 

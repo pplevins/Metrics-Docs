@@ -33,13 +33,13 @@ The PromQL expression inside a panel that retrieves the data to display. Each pa
 A row is a horizontal grouping element within a dashboard. Rows help you organize related panels and can be collapsed to simplify the view.
 
 **Variable**
-A variable is a dynamic placeholder in a dashboard that allows you to filter or switch what the dashboard displays — for example, switching between environments (`prod` / `staging`) or between service instances. Variables appear as dropdown selectors at the top of a dashboard.
+A variable is a dynamic placeholder in a dashboard that allows you to filter or switch what the dashboard displays - for example, switching between environments (`prod` / `staging`) or between service instances. Variables appear as dropdown selectors at the top of a dashboard.
 
 **Alert Rule**
 An alert rule is a condition you define that Grafana evaluates against your metrics. When the condition is met (e.g., error rate > 5% for 5 minutes), Grafana triggers an alert and sends a notification through the configured contact point.
 
 **Contact Point**
-A contact point is where alert notifications are sent — for example, an email address, a Slack channel, or a PagerDuty integration.
+A contact point is where alert notifications are sent - for example, an email address, a Slack channel, or a PagerDuty integration.
 
 **Folder**
 Dashboards in Grafana are organized into folders. Use folders to group dashboards by team, service, or environment.
@@ -48,7 +48,7 @@ Dashboards in Grafana are organized into folders. Use folders to group dashboard
 
 ### Template Dashboards
 
-Rather than building every dashboard from scratch, Grafana supports **template dashboards** — pre-built dashboards that you can import and use immediately.
+Rather than building every dashboard from scratch, Grafana supports **template dashboards** - pre-built dashboards that you can import and use immediately.
 
 **Grafana.com Dashboard Library**
 The Grafana community publishes hundreds of ready-made dashboards for common use cases (Node Exporter, Kubernetes, PostgreSQL, NGINX, and more) at:
