@@ -153,3 +153,5 @@ You can configure any panel to link to another dashboard when clicked. This is c
 - **Name dashboards clearly** and organize them into folders by service, team, or environment.
 - **Version your dashboards** - export them as JSON and store them in version control alongside your service code.
 - **Avoid duplicating panels** across dashboards. If multiple dashboards need the same panel, consider whether they should link to a shared dashboard instead.
+
+For a deeper dive, follow the official [Grafana dashboard best practices](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/best-practices/) guide.
