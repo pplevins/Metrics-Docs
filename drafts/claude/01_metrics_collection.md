@@ -217,21 +217,58 @@ Prometheus supports several service discovery mechanisms:
 | **Consul SD** | Prometheus queries Consul (a service registry) to find services | Environments using Consul |
 | **EC2 SD** | Prometheus discovers AWS EC2 instances automatically | AWS-based infrastructure |
 
-In a Kubernetes environment, **Kubernetes Service Discovery** is the standard approach. When combined with the Prometheus Operator (see below), Prometheus can automatically discover and collect from any service that has the right configuration applied — without any manual updates to the Prometheus config.
+In a Kubernetes environment, **Kubernetes Service Discovery** is the standard approach. When combined with the Prometheus Operator (see below), Prometheus can automatically discover and collect from any service that has the right configuration applied - without any manual updates to the Prometheus config.
 
 ---
 
 ## Prometheus Operator
 
-The **Prometheus Operator** is a tool for Kubernetes that simplifies deploying and managing Prometheus. Instead of editing Prometheus configuration files directly, you use Kubernetes-native resources to tell Prometheus what to collect from.
+The **Prometheus Operator** is a tool for Kubernetes that simplifies deploying and managing Prometheus - and the broader monitoring ecosystem around it. Instead of manually editing Prometheus configuration files, you define what you want to monitor using standard Kubernetes resources, and the Operator takes care of the rest.
 
-The two most important custom resources introduced by the Prometheus Operator are:
+The Operator works by introducing a set of **Custom Resource Definitions (CRDs)** - extensions to Kubernetes that let you describe your monitoring setup in the same way you'd describe any other part of your infrastructure.
 
-**ServiceMonitor** - defines which Kubernetes Services Prometheus should collect from, and on which port and path. You apply a `ServiceMonitor` to your service, and Prometheus automatically picks it up and starts collecting.
+These CRDs fall into two groups:
 
-**PodMonitor** - similar to `ServiceMonitor`, but targets individual Pods rather than Services.
+### Instance-Based Resources
 
-**Why this matters for you:** If your service is running on Kubernetes and the Prometheus Operator is installed, you don't need to touch any Prometheus configuration files. You simply apply a `ServiceMonitor` resource alongside your service, and Prometheus will automatically start collecting your metrics.
+These resources manage the **deployment and lifecycle** of the monitoring components themselves:
+
+| Resource          | What It Does                                                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Prometheus`      | Deploys and manages a Prometheus instance in your cluster, including replicas, storage, and which scrape configurations to use                       |
+| `Alertmanager`    | Deploys and manages an Alertmanager instance for handling and routing alert notifications                                                            |
+| `PrometheusAgent` | A lightweight variant of Prometheus that only collects and forwards metrics (no local storage or alerting) - useful for large-scale or remote setups |
+| `ThanosRuler`     | Deploys a Thanos Ruler instance for evaluating alerting and recording rules across multiple Prometheus instances                                     |
+
+### Config-Based Resources
+
+These resources define **what to collect and how** - they don't deploy anything themselves, but are picked up by the instance-based resources above and translated into Prometheus configuration automatically:
+
+| Resource             | What It Does                                                                                                                                         |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ServiceMonitor`     | Tells Prometheus to collect from a Kubernetes **Service** (and the pods behind it), selected by label                                                |
+| `PodMonitor`         | Similar to `ServiceMonitor`, but targets **Pods** directly rather than through a Service                                                             |
+| `Probe`              | Defines monitoring for **ingresses or static targets** - typically used with a blackbox exporter to check endpoint availability                      |
+| `ScrapeConfig`       | A lower-level resource for defining custom scrape configurations, including targets outside the cluster                                              |
+| `PrometheusRule`     | Defines **alerting and recording rules** that Prometheus (or Thanos Ruler) will evaluate. Rules are loaded dynamically without restarting Prometheus |
+| `AlertmanagerConfig` | Configures routing rules and receivers for a specific team or namespace within Alertmanager                                                          |
+
+### How It All Connects
+
+The `Prometheus` CRD uses **selectors** to discover which config-based resources apply to it. For example, a Prometheus instance can be configured to pick up all `ServiceMonitor` resources with a specific label - meaning each team can manage their own `ServiceMonitor` independently, and Prometheus will automatically include them without any central configuration change.
+
+```
+Prometheus CRD
+  ├── serviceMonitorSelector  →  picks up matching ServiceMonitors
+  ├── podMonitorSelector      →  picks up matching PodMonitors
+  ├── probeSelector           →  picks up matching Probes
+  ├── scrapeConfigSelector    →  picks up matching ScrapeConfigs
+  └── ruleSelector            →  picks up matching PrometheusRules
+```
+
+### What This Means for You
+
+If your service is running on Kubernetes and the Prometheus Operator is installed, you don't need to touch any Prometheus configuration files. You apply a `ServiceMonitor` resource alongside your service (matching the labels your Prometheus instance is watching), and Prometheus will automatically start collecting your metrics.
 
 **Example ServiceMonitor:**
 
@@ -241,7 +278,7 @@ kind: ServiceMonitor
 metadata:
   name: my-service-monitor
   labels:
-    release: prometheus  # Must match the Prometheus Operator's selector
+    release: prometheus  # Must match the Prometheus instance's serviceMonitorSelector
 spec:
   selector:
     matchLabels:
@@ -250,6 +287,8 @@ spec:
     - port: metrics      # The port name on your Service that exposes /metrics
       interval: 30s      # How often Prometheus collects
 ```
+
+For the full reference on all available resources and their configuration options, see the [official Prometheus Operator documentation](https://prometheus-operator.dev/docs/).
 
 ---
 
