@@ -173,9 +173,12 @@ http_requests_total{method="POST", status="500"} 3
 
 With labels, a single metric becomes a family of related time series - one for each unique combination of label values. This lets you slice and filter your data when querying in Grafana.
 
+> **NOTE:** The metric name is itself a label under the hood, called `__name__`. This means you can select a metric by name using a label selector: `{__name__="http_requests_total"}`. This is rarely needed day-to-day, but useful to know when building advanced queries.
+
 **Best practices for labels:**
 - Keep the number of label values bounded. Avoid using labels with high cardinality values (e.g., user IDs or request IDs), as each unique combination creates a separate time series, which can overload Prometheus.
 - Use labels for dimensions you'll actually filter or group by: `environment`, `region`, `service_name`, `method`, `status_code`.
+For more information about naming and label best practices, refer to the official [Metric and label naming](https://prometheus.io/docs/practices/naming/) documentation.
 
 ---
 
@@ -183,12 +186,15 @@ With labels, a single metric becomes a family of related time series - one for e
 
 The **Golden Signals** are four key metrics that Google's Site Reliability Engineering (SRE) practices define as the most important indicators of a service's health. Monitoring these four signals gives you a strong baseline understanding of how your service is performing.
 
-| Signal | What It Tells You | Example Metric |
-|---|---|---|
-| **Latency** | How long it takes to serve a request | `http_request_duration_seconds` |
-| **Traffic** | How much demand is being placed on your system | `http_requests_total` per second |
-| **Errors** | The rate of failed requests | `http_requests_total{status=~"5.."}` |
-| **Saturation** | How "full" your service is (CPU, memory, queue depth) | `process_cpu_seconds_total`, memory gauge |
+In Google's words:
+> If you measure all four golden signals and page a human (trigger an alert) when one signal is problematic, your service will be at least decently covered by monitoring.
+
+| Signal         | What It Tells You                                                                                                           | Example Metric                            |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **Latency**    | How long it takes to serve a request                                                                                        | `http_request_duration_seconds`           |
+| **Traffic**    | How much demand is being placed on your system                                                                              | `http_requests_total` per second          |
+| **Errors**     | The rate of failed requests                                                                                                 | `http_requests_total{status=~"5.."}`      |
+| **Saturation** | How "full" your service is (CPU, memory, queue depth). It's also about predicting in advance when the service will be full. | `process_cpu_seconds_total`, memory gauge |
 
 When designing what to monitor in your service, start with the Golden Signals. They answer the most critical question: **"Is my service working correctly for my users?"**
 
